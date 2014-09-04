@@ -30,9 +30,9 @@ if StrictVersion(seesaw.__version__) < StrictVersion("0.1.5"):
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20140809.03"
+VERSION = "20140904.01"
 USER_AGENT = 'ArchiveTeam'
-TRACKER_ID = 'twitchdisco'
+TRACKER_ID = 'twitpicdisco'
 TRACKER_HOST = 'tracker.archiveteam.org'
 
 
@@ -52,9 +52,9 @@ class CheckIP(SimpleTask):
 
         if self._counter <= 0:
             item.log_output('Checking IP address.')
-            result = socket.gethostbyname('twitch.tv')
+            result = socket.gethostbyname('twitpic.com')
 
-            if not result.startswith('192.16.71.'):
+            if not result.startswith('96.127.160.'):
                 item.log_output('Got IP address: {0}'.format(result))
                 item.log_output(
                     'Are you behind a firewall/proxy? That is a big no-no!')
@@ -104,9 +104,7 @@ class CustomProcessArgs(object):
     def realize(self, item):
         item_type, item_value = item['item_name'].split(':', 1)
 
-        if item_type == 'flv':
-            return ['python', 'getflv.py', item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-        elif item_type == 'user':
+        if item_type == 'image':
             return ['python', 'discover.py', item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
         else:
             raise ValueError('unhandled item type: {0}'.format(item_type))
@@ -119,14 +117,12 @@ def get_hash(filename):
 
 CWD = os.getcwd()
 PIPELINE_SHA1 = get_hash(os.path.join(CWD, 'pipeline.py'))
-LUA_SHA1 = get_hash(os.path.join(CWD, 'getflv.py'))
 
 
 def stats_id_function(item):
     # NEW for 2014! Some accountability hashes and stats.
     d = {
         'pipeline_hash': PIPELINE_SHA1,
-        'lua_hash': LUA_SHA1,
         'python_version': sys.version,
     }
 
@@ -139,7 +135,7 @@ def stats_id_function(item):
 # This will be shown in the warrior management panel. The logo should not
 # be too big. The deadline is optional.
 project = Project(
-    title="Twitch Discovery",
+    title="Twitpic Discovery",
     project_html="""
         <img class="project-logo" alt="Project logo" src="http://archiveteam.org/images/d/d4/Twitch_Logo.png" height="50px" title="aoooo"/>
         <h2>Twitch Phase 1: Content Discovery. <span class="links"><a href="http://twitch.tv/">Website</a> &middot; <a href="http://tracker.archiveteam.org/twitchdisco/">Leaderboard</a></span></h2>
@@ -152,7 +148,7 @@ pipeline = Pipeline(
     CheckIP(),
     GetItemFromTracker("http://%s/%s" % (TRACKER_HOST, TRACKER_ID), downloader,
         VERSION),
-    PrepareDirectories(warc_prefix="twitchdisco"),
+    PrepareDirectories(warc_prefix="twitpicdisco"),
     ExternalProcess('Scraper', CustomProcessArgs(),
         max_tries=2,
         accept_on_exit_code=[0],
