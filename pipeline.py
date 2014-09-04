@@ -9,7 +9,7 @@ import sys
 import time
 
 import seesaw
-from seesaw.config import realize, NumberConfigValue
+from seesaw.config import NumberConfigValue
 from seesaw.externalprocess import ExternalProcess
 from seesaw.item import ItemInterpolation, ItemValue
 from seesaw.pipeline import Pipeline
@@ -22,7 +22,6 @@ from seesaw.tracker import GetItemFromTracker, PrepareStatsForTracker, \
 # check the seesaw version
 if StrictVersion(seesaw.__version__) < StrictVersion("0.1.5"):
     raise Exception("This pipeline needs seesaw version 0.1.5 or higher.")
-
 
 
 ###########################################################################
@@ -54,7 +53,8 @@ class CheckIP(SimpleTask):
             item.log_output('Checking IP address.')
             result = socket.gethostbyname('twitpic.com')
 
-            if not result.startswith('96.127.160.'):
+            if not (result.startswith('96.127.160.') or
+                    result.startswith('173.236.110.')):
                 item.log_output('Got IP address: {0}'.format(result))
                 item.log_output(
                     'Are you behind a firewall/proxy? That is a big no-no!')
@@ -83,8 +83,9 @@ class PrepareDirectories(SimpleTask):
         os.makedirs(dirname)
 
         item["item_dir"] = dirname
-        item["warc_file_base"] = "%s-%s-%s" % (self.warc_prefix, item_name.replace(':', '_'),
-            time.strftime("%Y%m%d-%H%M%S"))
+        item["warc_file_base"] = "%s-%s-%s" % (self.warc_prefix,
+                                               item_name.replace(':', '_'),
+                                               time.strftime("%Y%m%d-%H%M%S"))
 
         open("%(item_dir)s/%(warc_file_base)s.warc.gz" % item, "w").close()
 
@@ -95,7 +96,7 @@ class MoveFiles(SimpleTask):
 
     def process(self, item):
         os.rename("%(item_dir)s/%(warc_file_base)s.txt.gz" % item,
-              "%(data_dir)s/%(warc_file_base)s.txt.gz" % item)
+                  "%(data_dir)s/%(warc_file_base)s.txt.gz" % item)
 
         shutil.rmtree("%(item_dir)s" % item)
 
@@ -105,42 +106,10 @@ class CustomProcessArgs(object):
         item_type, item_value = item['item_name'].split(':', 1)
 
         if item_type == 'image':
-            return ['python', 'discover.py', "%0" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%1" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%2" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%3" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%4" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%5" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%6" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%7" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%8" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%9" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%a" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%b" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%c" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%d" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%e" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%f" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%g" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%h" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%i" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%j" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%k" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%l" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%m" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%n" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%o" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%p" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%q" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%r" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%s" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%t" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%u" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%v" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%w" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%x" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%y" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
-            return ['python', 'discover.py', "%z" % item_value, "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
+            # Expect something like image:0-999 or image:1000-1999
+            start_num, end_num = item_value.split('-', 1)
+            return ['python', 'discover.py', start_num, end_num,
+                    "%(item_dir)s/%(warc_file_base)s.txt.gz" % item]
         else:
             raise ValueError('unhandled item type: {0}'.format(item_type))
 
@@ -152,6 +121,7 @@ def get_hash(filename):
 
 CWD = os.getcwd()
 PIPELINE_SHA1 = get_hash(os.path.join(CWD, 'pipeline.py'))
+SCRIPT_SHA1 = get_hash(os.path.join(CWD, 'discovery.py'))
 
 
 def stats_id_function(item):
@@ -159,6 +129,7 @@ def stats_id_function(item):
     d = {
         'pipeline_hash': PIPELINE_SHA1,
         'python_version': sys.version,
+        'script_hash': SCRIPT_SHA1,
     }
 
     return d
@@ -172,11 +143,17 @@ def stats_id_function(item):
 project = Project(
     title="Twitpic Discovery",
     project_html="""
-        <img class="project-logo" alt="Project logo" src="http://archiveteam.org/images/d/d4/Twitch_Logo.png" height="50px" title="aoooo"/>
-        <h2>Twitch Phase 1: Content Discovery. <span class="links"><a href="http://twitch.tv/">Website</a> &middot; <a href="http://tracker.archiveteam.org/twitchdisco/">Leaderboard</a></span></h2>
-        <p>Twitch is releasing videos from their PC. <a href="https://archive.org/donate/">Donate to IA for disk space!</a></p>
+        <img class="project-logo" alt="Project logo" src="http://archiveteam.org/images/6/68/Twitpic-logo.png" height="50px" title="Follow us on Quitter!"/>
+        <h2>TwitPic Phase 1.
+        <span class="links">
+             <a href="http://twitpic.com/">Website</a> &middot;
+             <a href="http://tracker.archiveteam.org/twitpicdisco/">Leaderboard</a>
+             <a href="http://archiveteam.org/index.php?title=TwitPic">Wiki</a> &middot;
+         </span>
+        </h2>
+        <p>TwitPic shuts down. This is phase 1: content discovery.</p>
     """,
-    utc_deadline=datetime.datetime(2014, 8, 20, 23, 59, 0)
+    utc_deadline=datetime.datetime(2014, 9, 23, 23, 59, 0)
 )
 
 pipeline = Pipeline(
