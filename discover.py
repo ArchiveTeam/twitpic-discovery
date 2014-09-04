@@ -1,123 +1,106 @@
-'''Given username, find other usernames and videos'''
+'''Find valid short codes.'''
 import requests
-import re
-import gzip
-import json
+import string
 import sys
 import time
-from urllib import urlencode
+import gzip
 
 
-API_BASE = 'https://api.twitch.tv/kraken'
-FOLLOWS_URL = API_BASE + '/channels/{0}/follows'
-FOLLOWING_URL = API_BASE + '/users/{0}/follows/channels'
-VIDEOS_URL = API_BASE + '/channels/{0}/videos'
-# VIEWS_LOWER_LIMIT = 100
-default_headers = {'User-Agent': 'ArchiveTeam'}
+DEFAULT_HEADERS = {'User-Agent': 'ArchiveTeam'}
+ALPHABET = string.digits + string.ascii_lowercase
+assert len(ALPHABET) == 10 + 26
 
 
-class GiveUpError(Exception):
-    pass
+class FetchError(Exception):
+    '''Custom error class when fetching does not meet our expectation.'''
 
 
 def main():
-    username = sys.argv[1]
-    output_filename = sys.argv[2]
+    # Take the program arguments given to this script
+    # Normal programs use 'argparse' but this keeps things simple
+    start_num = int(sys.argv[1])
+    end_num = int(sys.argv[2])
+    output_filename = sys.argv[3]  # this should be something lile myfile.txt.gz
 
-    users, videos = fetch(username)
+    assert start_num <= end_num
 
-    gzip_file = gzip.open(output_filename, 'w')
+    print('Starting', start_num, end_num)
 
-    doc = {
-        'type': 'discover',
-        'username': username,
-        'users': users,
-        'videos': videos,
-    }
+    gzip_file = gzip.GzipFile(output_filename, 'wb')
 
-    gzip_file.write(json.dumps(doc, indent=2))
+    for shortcode in check_range(start_num, end_num):
+        # Write the valid shortcodes one per line to the file
+        line = '{0}\n'.format(shortcode)
+        gzip_file.write(line.encode('ascii'))
+
     gzip_file.close()
 
-
-def twitch_iter(url, params, key, func, cond=lambda x: True):
-    data = set()
-    retries = 0
-
-    url = url + '?' + urlencode(params)
-    while True:
-        print('Get', url)
-        response = requests.get(url, headers=default_headers)
-        print(response.status_code)
-
-        if response.status_code == 200:
-            doc = response.json()
-            if doc[key]:
-                data.update(func(x) for x in doc[key] if cond(x))
-                url = doc['_links']['next']
-#                 time.sleep(0.5)  # play nice
-
-                if '_total' in doc:
-                    print('Remain:', doc['_total'] - len(data))
-
-                if '/follows' in url and len(data) > 10000:
-                    return list(data)
-
-                retries = 0
-
-                continue
-        else:
-            if response.status_code == 404:
-                return data
-            if response.status_code == 422:
-                return []
-
-            retries += 1
-            if retries >= 3:
-                # don't throw GiveUpError if it reliably 504s
-                if response.status_code == 504:
-                    return data
-                raise GiveUpError('URL {0} failed {1} times'
-                                  .format(url, retries),
-                                  list(data))
-            continue
-
-        return list(data)
+    print('Done')
 
 
-def fetch(username):
-    users = set()
-    videos = set()
+def int_to_str(num, alphabet):
+    '''Convert integer to string.'''
+    # http://stackoverflow.com/a/1119769/1524507
+    if (num == 0):
+        return alphabet[0]
+    arr = []
+    base = len(alphabet)
+    while num:
+        rem = num % base
+        num = num // base
+        arr.append(alphabet[rem])
+    arr.reverse()
+    return ''.join(arr)
 
-    try:
-        # user discovery: who follows this user
-        users.update(twitch_iter(FOLLOWS_URL.format(username),
-                                 {'limit': '100'}, 'follows',
-                                 lambda x: x['user']['name']))
-    except GiveUpError as error:
-        print(error.args[0])
-        users.update(error.args[1])
 
-    try:
-        # user discovery: who does this user follow
-        users.update(twitch_iter(FOLLOWING_URL.format(username),
-                                 {'limit': '100'}, 'follows',
-                                 lambda x: x['channel']['name']))
-    except GiveUpError as error:
-        print(error.args[0])
-        users.update(error.args[1])
+def check_range(start_num, end_num):
+    '''Check if picture exists.
 
-    # video discovery: highlights
-    videos.update(twitch_iter(VIDEOS_URL.format(username),
-                              {'limit': '100'},
-                              'videos', lambda x: (x['_id'], x['views'])))
-#                               lambda x: x['views'] >= VIEWS_LOWER_LIMIT))
-    # video discovery: past broadcasts
-    videos.update(twitch_iter(VIDEOS_URL.format(username),
-                              {'limit': '100', 'broadcasts': 'true'},
-                              'videos', lambda x: (x['_id'], x['views'])))
-#                               lambda x: x['views'] >= VIEWS_LOWER_LIMIT))
+    This is a generator which yields the valid shortcodes.
+    '''
 
-    return (list(users), list(videos))
+    for num in range(start_num, end_num + 1):
+        shortcode = int_to_str(num, ALPHABET)
+        url = 'http://twitpic.com/{0}'.format(shortcode)
+        counter = 0
+
+        while True:
+            # Try 5 times before giving up
+            if counter > 5:
+                # This will stop the script with an error
+                raise Exception('Giving up!')
+
+            try:
+                result = fetch(url)
+            except FetchError:
+                # The server may be overloaded so wait a bit
+                time.sleep(5)
+            else:
+                if result:
+                    yield shortcode
+
+                break  # stop the while loop
+
+
+def fetch(url):
+    '''Fetch the URL and check if it returns OK.
+
+    Returns True if OK. Otherwise, returns False
+    '''
+    print('Fetch', url)
+    response = requests.get(url, headers=DEFAULT_HEADERS)
+
+    print('Got', response.status_code, response.reason)
+
+    if response.status_code == 200:
+        # The item exists
+        return True
+    elif response.status_code == 404:
+        # Does not exist
+        return False
+    else:
+        # Problem
+        raise FetchError()
 
 
 if __name__ == '__main__':
