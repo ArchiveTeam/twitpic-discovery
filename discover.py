@@ -9,6 +9,7 @@ The file will contain things like:
 
 short:abcd
 user:noaheverett
+tag:asdf
 '''
 import gzip
 import re
@@ -99,6 +100,9 @@ def check_range(start_num, end_num):
                     if username:
                         yield 'user:{0}'.format(username)
 
+                    for tag in extract_tags(text):
+                        yield 'tag:{0}'.format(tag)
+
                 break  # stop the while loop
 
             counter += 1
@@ -138,6 +142,11 @@ def extract_handle(text):
     if match:
         return match.group(1)
 
+
+def extract_tags(text):
+    '''Return a list of tags from the text.'''
+    # Search for <a href="/tag/asdf">
+    return re.findall(r'"/tag/([^"]+)"', text)
 
 if __name__ == '__main__':
     main()
