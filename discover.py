@@ -88,6 +88,7 @@ def check_range(start_num, end_num):
                 text = fetch(url)
             except FetchError:
                 # The server may be overloaded so wait a bit
+                print('Sleeping...')
                 time.sleep(5)
             else:
                 if text:
@@ -99,6 +100,8 @@ def check_range(start_num, end_num):
                         yield 'user:{0}'.format(username)
 
                 break  # stop the while loop
+
+            counter += 1
 
 
 def fetch(url):
