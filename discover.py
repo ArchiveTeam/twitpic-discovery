@@ -1,9 +1,21 @@
-'''Find valid short codes.'''
+'''Find valid short codes and usernames.
+
+To use the script manually::
+
+    python discover.py 0 1000 myfile.txt.gz
+
+
+The file will contain things like:
+
+short:abcd
+user:noaheverett
+'''
+import gzip
+import re
 import requests
 import string
 import sys
 import time
-import gzip
 
 
 DEFAULT_HEADERS = {'User-Agent': 'ArchiveTeam'}
@@ -20,7 +32,7 @@ def main():
     # Normal programs use 'argparse' but this keeps things simple
     start_num = int(sys.argv[1])
     end_num = int(sys.argv[2])
-    output_filename = sys.argv[3]  # this should be something lile myfile.txt.gz
+    output_filename = sys.argv[3]  # this should be something like myfile.txt.gz
 
     assert start_num <= end_num
 
@@ -29,7 +41,7 @@ def main():
     gzip_file = gzip.GzipFile(output_filename, 'wb')
 
     for shortcode in check_range(start_num, end_num):
-        # Write the valid shortcodes one per line to the file
+        # Write the valid result one per line to the file
         line = '{0}\n'.format(shortcode)
         gzip_file.write(line.encode('ascii'))
 
@@ -56,7 +68,9 @@ def int_to_str(num, alphabet):
 def check_range(start_num, end_num):
     '''Check if picture exists.
 
-    This is a generator which yields the valid shortcodes.
+    This is a generator which yields the valid shortcodes and usernames.
+
+    Each line is like short:abcd or user:noaheverett
     '''
 
     for num in range(start_num, end_num + 1):
@@ -71,13 +85,18 @@ def check_range(start_num, end_num):
                 raise Exception('Giving up!')
 
             try:
-                result = fetch(url)
+                text = fetch(url)
             except FetchError:
                 # The server may be overloaded so wait a bit
                 time.sleep(5)
             else:
-                if result:
-                    yield shortcode
+                if text:
+                    yield 'short:{0}'.format(shortcode)
+
+                    username = extract_handle(text)
+
+                    if username:
+                        yield 'user:{0}'.format(username)
 
                 break  # stop the while loop
 
@@ -85,7 +104,7 @@ def check_range(start_num, end_num):
 def fetch(url):
     '''Fetch the URL and check if it returns OK.
 
-    Returns True if OK. Otherwise, returns False
+    Returns True, returns the response text. Otherwise, returns None
     '''
     print('Fetch', url)
     response = requests.get(url, headers=DEFAULT_HEADERS)
@@ -94,13 +113,27 @@ def fetch(url):
 
     if response.status_code == 200:
         # The item exists
-        return True
+        if not response.text:
+            # If HTML is empty maybe server broke
+            raise FetchError()
+
+        return response.text
     elif response.status_code == 404:
         # Does not exist
-        return False
+        return
     else:
         # Problem
         raise FetchError()
+
+
+def extract_handle(text):
+    '''Return the Twitter handle from the text.'''
+    # Search for something like
+    # <meta name="twitter:creator" value="@noaheverett" />
+    match = re.search(r'"twitter:creator"\s+value="@([a-zA-Z0-9_-]+)"', text)
+
+    if match:
+        return match.group(1)
 
 
 if __name__ == '__main__':
