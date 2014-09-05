@@ -24,9 +24,9 @@ def main():
     counter = start_num
     while True:
         lower = counter
-        upper = min(counter + pics_per_item, end_num)
+        upper = min(counter + pics_per_item - 1, end_num)
 
-        print('picture:{0}-{1}'.format(lower, upper))
+        print('image:{0}-{1}'.format(lower, upper))
 
         counter += 1000
         if counter > end_num:
