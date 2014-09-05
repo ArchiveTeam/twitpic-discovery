@@ -29,7 +29,7 @@ if StrictVersion(seesaw.__version__) < StrictVersion("0.1.5"):
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20140904.01"
+VERSION = "20140905.01"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'twitpicdisco'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -121,7 +121,7 @@ def get_hash(filename):
 
 CWD = os.getcwd()
 PIPELINE_SHA1 = get_hash(os.path.join(CWD, 'pipeline.py'))
-SCRIPT_SHA1 = get_hash(os.path.join(CWD, 'discovery.py'))
+SCRIPT_SHA1 = get_hash(os.path.join(CWD, 'discover.py'))
 
 
 def stats_id_function(item):
