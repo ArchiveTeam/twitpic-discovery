@@ -80,8 +80,8 @@ def check_range(start_num, end_num):
         counter = 0
 
         while True:
-            # Try 5 times before giving up
-            if counter > 5:
+            # Try 20 times before giving up
+            if counter > 20:
                 # This will stop the script with an error
                 raise Exception('Giving up!')
 
@@ -89,8 +89,8 @@ def check_range(start_num, end_num):
                 text = fetch(url)
             except FetchError:
                 # The server may be overloaded so wait a bit
-                print('Sleeping...')
-                time.sleep(5)
+                print('Sleeping... If you see this')
+                time.sleep(10)
             else:
                 if text:
                     yield 'short:{0}'.format(shortcode)
@@ -116,7 +116,8 @@ def fetch(url):
     print('Fetch', url)
     response = requests.get(url, headers=DEFAULT_HEADERS)
 
-    print('Got', response.status_code, response.reason)
+    # response doesn't have a reason attribute all the time??
+    print('Got', response.status_code, getattr(response, 'reason'))
 
     if response.status_code == 200:
         # The item exists
