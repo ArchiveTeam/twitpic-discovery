@@ -7,6 +7,7 @@ import shutil
 import socket
 import sys
 import time
+import random
 
 import seesaw
 from seesaw.config import NumberConfigValue
@@ -29,8 +30,15 @@ if StrictVersion(seesaw.__version__) < StrictVersion("0.1.5"):
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20140906.01"
-USER_AGENT = 'ArchiveTeam'
+
+USER_AGENTS_LIST = ['Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0',
+                    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:29.0) Gecko/20120101 Firefox/29.0',
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:25.0) Gecko/20100101 Firefox/25.0',
+                    'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36',
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1664.3 Safari/537.36']
+
+VERSION = "20140907.01"
+USER_AGENT = random.choice(USER_AGENTS_LIST)
 TRACKER_ID = 'twitpicdisco'
 TRACKER_HOST = 'tracker.archiveteam.org'
 
