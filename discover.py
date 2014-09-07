@@ -18,8 +18,12 @@ import string
 import sys
 import time
 
-
-DEFAULT_HEADERS = {'User-Agent': 'ArchiveTeam'}
+USER_AGENTS_LIST = ['Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0',
+                    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:29.0) Gecko/20120101 Firefox/29.0',
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:25.0) Gecko/20100101 Firefox/25.0',
+                    'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36',
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1664.3 Safari/537.36']
+DEFAULT_HEADERS = {'User-Agent': random.choice(USER_AGENTS_LIST)}
 ALPHABET = string.digits + string.ascii_lowercase
 assert len(ALPHABET) == 10 + 26
 
